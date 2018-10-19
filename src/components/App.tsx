@@ -10,11 +10,8 @@ interface HasPath {
   path: string;
 }
 
-interface Props {
-  model: Model;
-}
-
 interface State {
+  model: Model;
   nowShowing: NowShowing;
   editing: string | null;
 }
@@ -33,9 +30,10 @@ const nowShowing = (path: string): NowShowing => {
 const countTodosByStatus = (todos: Todo[], status: TodoStatus) =>
   todos.filter(t => t.status.type === status.type).length;
 
-class App extends React.Component<Props & HasPath, State> {
+class App extends React.Component<HasPath, State> {
   state = {
     editing: null,
+    model: Model.hydrate(),
     nowShowing: nowShowing(this.props.path),
   };
 
@@ -44,12 +42,12 @@ class App extends React.Component<Props & HasPath, State> {
   >();
 
   activeTodoCount = () =>
-    countTodosByStatus(this.props.model.todos, todoActive);
+    countTodosByStatus(this.state.model.todos, todoActive);
 
   completedCount = () =>
-    countTodosByStatus(this.props.model.todos, todoCompleted);
+    countTodosByStatus(this.state.model.todos, todoCompleted);
 
-  hasTodos = () => this.props.model.todos.length > 0;
+  hasTodos = () => this.state.model.todos.length > 0;
 
   renderTodos = () =>
     this.todos().map(todo => (
@@ -119,7 +117,7 @@ class App extends React.Component<Props & HasPath, State> {
       case 'TodoCompleted':
         return this.filteredTodos(this.state.nowShowing);
       default:
-        return this.props.model.todos;
+        return this.state.model.todos;
     }
   };
 
@@ -129,21 +127,25 @@ class App extends React.Component<Props & HasPath, State> {
 
   save = (todo: Todo, text: string) => {
     const self = this;
-    self.props.model.saveTodo(todo, text);
+    self.state.model.saveTodo(todo, text);
   };
 
   edit = (todo: Todo) =>
     this.setState(state => ({ ...state, editing: todo.id }));
 
-  delete = (todo: Todo) => this.props.model.deleteTodo(todo);
+  delete = (todo: Todo) => this.state.model.deleteTodo(todo);
 
   filteredTodos = (status: TodoStatus) =>
-    this.props.model.todos.filter((t: Todo) => t.status.type === status.type);
+    this.state.model.todos.filter((t: Todo) => t.status.type === status.type);
 
   toggle = (todo: Todo) => {
     const self = this;
-    self.props.model.toggle(todo);
+    self.state.model.toggle(todo);
   };
+
+  shouldComponentUpdate?() {
+    return true;
+  }
 
   toggleAll = (e: React.FormEvent<HTMLInputElement>) => {
     const showing = this.todos();
@@ -151,7 +153,7 @@ class App extends React.Component<Props & HasPath, State> {
       showing.length ===
       showing.filter(t => t.status.type === 'TodoCompleted').length;
     const toggleTo = allCompleted ? todoActive : todoCompleted;
-    this.props.model.toggleAll(toggleTo);
+    this.state.model.toggleAll(toggleTo);
   };
 
   handleNewTodoKeyDown = (e: React.KeyboardEvent) => {
@@ -161,13 +163,13 @@ class App extends React.Component<Props & HasPath, State> {
     e.preventDefault();
     const field = this.newFieldRef.current;
     if (field && field.value) {
-      this.props.model.addTodo(field.value);
+      this.state.model.addTodo(field.value);
       field.value = '';
     }
   };
 
   clearCompleted = () => {
-    this.props.model.clearCompleted();
+    this.state.model.clearCompleted();
   };
 }
 

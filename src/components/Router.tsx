@@ -28,7 +28,7 @@ const Router = () => (
 );
 
 const render = (props: RouteComponentProps<RouterProps>) => (
-  <App model={model} path={props.match.params.path || ''} />
+  <App path={props.match.params.path || ''} />
 );
 
 const renderApp = () => {
